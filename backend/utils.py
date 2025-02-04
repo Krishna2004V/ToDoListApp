@@ -1,12 +1,12 @@
 from backend.database import get_all_tasks
 
-def filter_tasks(tasks, status=None, priority=None):
+def filter_tasks(tasks, completed=None, priority=None):
     """
-    Filter tasks based on status (completed or not) and priority (1, 2, 3).
+    Filter tasks based on completed status (True/False) and priority (1, 2, 3).
     Uses the `filter` function for functional programming.
     """
     return list(filter(lambda task: 
-        (status is None or task.completed == status) and 
+        (completed is None or task.completed == completed) and 
         (priority is None or task.priority == priority), tasks))
 
 def sort_tasks(tasks, key="priority", reverse=False):
