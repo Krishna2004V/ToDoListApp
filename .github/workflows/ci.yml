@@ -1,0 +1,28 @@
+ 
+name: CI Pipeline
+
+on: [push, pull_request]  # Runs on every push and PR
+
+jobs:
+  test:
+    runs-on: ubuntu-latest  # Uses a Linux environment
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m venv env
+          source env/bin/activate
+          pip install -r requirements.txt
+
+      - name: Run Tests
+        run: |
+          source env/bin/activate
+          pytest tests/
