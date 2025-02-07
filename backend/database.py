@@ -39,49 +39,42 @@ def get_db():
 
 def add_task(title, priority=1):
     """Add a new task to the database"""
-    db = SessionLocal()
-    new_task = Task(title=title, priority=priority)
-    db.add(new_task)
-    db.commit()
-    db.refresh(new_task)
-    db.close()
-    return new_task
+    with SessionLocal() as db:
+        new_task = Task(title=title, priority=priority)
+        db.add(new_task)
+        db.commit()
+        db.refresh(new_task)
+        return new_task
 
 
 def get_all_tasks():
-    """Retrieve all tasks from the database"""
-    db = SessionLocal()
-    tasks = db.query(Task).all()
-    db.close()
-    return tasks
+    """Fetch all tasks from the database including their completion status."""
+    with SessionLocal() as db:
+        return db.query(Task).all()
 
 
 def mark_task_complete(task_id):
     """Mark a task as completed"""
-    db = SessionLocal()
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if task:
-        task.completed = True
-        db.commit()
-    db.close()
+    with SessionLocal() as db:
+        task = db.query(Task).filter(Task.id == task_id).first()
+        if task:
+            task.completed = True
+            db.commit()
 
 
 def delete_task(task_id: int):
     """Delete a task from the database by its ID"""
-    db = SessionLocal()
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if task:
-        db.delete(task)
-        db.commit()
-        db.close()
-        return True
-    db.close()
-    return False
+    with SessionLocal() as db:
+        task = db.query(Task).filter(Task.id == task_id).first()
+        if task:
+            db.delete(task)
+            db.commit()
+            return True
+        return False
 
 
 def clear_all_tasks():
     """Delete all tasks from the database"""
-    db = SessionLocal()
-    db.query(Task).delete()
-    db.commit()
-    db.close()
+    with SessionLocal() as db:
+        db.query(Task).delete()
+        db.commit()

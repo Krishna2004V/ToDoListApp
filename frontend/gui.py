@@ -11,11 +11,13 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QPushButton,
-    QListWidget,
+    QTableWidget,
+    QTableWidgetItem,
     QLineEdit,
     QComboBox,
     QMessageBox,
 )
+from PySide6.QtGui import QColor
 from PySide6.QtCore import QFile, QTimer
 from backend.database import (
     add_task,
@@ -24,7 +26,7 @@ from backend.database import (
     delete_task,
     clear_all_tasks,
 )
-from backend.utils import filter_tasks, sort_tasks, format_tasks
+from backend.utils import sort_tasks, format_tasks
 
 
 class ToDoApp(QWidget):
@@ -33,77 +35,144 @@ class ToDoApp(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("To-Do List Manager")
-        self.setGeometry(200, 200, 400, 500)
-        self.dark_mode = self.is_windows_dark_mode()  # Store initial theme
+        self.setGeometry(200, 200, 500, 500)
+        self.dark_mode = self.is_windows_dark_mode()
         self.apply_theme()
         self.initUI()
 
-        # Periodically check for theme changes
         self.theme_timer = QTimer(self)
         self.theme_timer.timeout.connect(self.check_theme_update)
-        self.theme_timer.start(3000)  # Check every 3 seconds
+        self.theme_timer.start(3000)
 
     def check_theme_update(self):
-        """Check if Windows theme changed and update the UI"""
         current_mode = self.is_windows_dark_mode()
         if current_mode != self.dark_mode:
             self.dark_mode = current_mode
             self.apply_theme()
 
     def apply_theme(self):
-        """Apply Light or Dark Mode based on Windows settings"""
+        """Apply consistent dark or light mode styling throughout the application"""
         if self.is_windows_dark_mode():
-            dark_style = """
-                QWidget {
-                    background-color: #2E2E2E;
-                    color: white;
-                }
+            theme_style = """
+                QWidget { background-color: #2E2E2E; color: white; }
                 QPushButton {
-                    background-color: #555555;
+                    background-color: #444; 
                     color: white;
-                    border: 1px solid #777777;
-                    border-radius: 5px;
+                    border-radius: 8px;
+                    padding: 8px;
+                    font-size: 14px;
+                    border: 1px solid #666;
+                }
+                QPushButton:hover { background-color: #555; }
+                QPushButton:pressed { background-color: #666; }
+                QPushButton#delete_task_button { background-color: #D9534F; }
+                QPushButton#delete_task_button:hover { background-color: #C9302C; }
+                QPushButton#complete_task_button { background-color: #5CB85C; }
+                QPushButton#complete_task_button:hover { background-color: #4CAE4C; }
+                QTableWidget {
+                    background-color: #3A3A3A;
+                    color: white;
+                    gridline-color: #555;
+                    selection-background-color: #555;
+                }
+                QHeaderView::section {
+                    background-color: #444;
                     padding: 5px;
+                    font-weight: bold;
+                    border: 1px solid #666;
                 }
-                QPushButton:hover {
-                    background-color: #666666;
-                }
-                QLineEdit, QComboBox, QListWidget {
-                    background-color: #444444;
+                QComboBox {
+                    background-color: #444;
                     color: white;
-                    border: 1px solid #666666;
-                    border-radius: 5px;
+                    border-radius: 6px;
+                    padding: 5px;
+                    border: 1px solid #666;
+                }
+                QComboBox:hover { border: 1px solid #888; }
+                QComboBox::drop-down { border: none; background: transparent; }
+                QComboBox QAbstractItemView {
+                    background-color: #3A3A3A;
+                    selection-background-color: #555;
+                    border-radius: 6px;
+                }
+                QLineEdit {
+                    background-color: #3A3A3A;
+                    color: white;
+                    border: 2px solid #555;
+                    border-radius: 8px;
+                    padding: 6px;
+                    font-size: 14px;
+                }
+                QLineEdit:focus {
+                    border: 2px solid #1DB954;
+                    background-color: #444;
                 }
             """
-            self.setStyleSheet(dark_style)
         else:
-            light_style = """
-                QWidget {
-                    background-color: #F5F5F5;
-                    color: black;
-                }
+            theme_style = """
+                QWidget { background-color: #F5F5F5; color: black; }
                 QPushButton {
-                    background-color: #DDDDDD;
+                    background-color: #E0E0E0; 
                     color: black;
-                    border: 1px solid #CCCCCC;
-                    border-radius: 5px;
-                    padding: 5px;
+                    border-radius: 8px;
+                    padding: 8px;
+                    font-size: 14px;
+                    border: 1px solid #BDBDBD;
                 }
-                QPushButton:hover {
-                    background-color: #EEEEEE;
-                }
-                QLineEdit, QComboBox, QListWidget {
+                QPushButton:hover { background-color: #D6D6D6; }
+                QPushButton:pressed { background-color: #BDBDBD; }
+                QPushButton#delete_task_button { background-color: #FF6B6B; }
+                QPushButton#delete_task_button:hover { background-color: #FF3B3B; }
+                QPushButton#complete_task_button { background-color: #4CAF50; }
+                QPushButton#complete_task_button:hover { background-color: #45A049; }
+                QTableWidget {
                     background-color: white;
                     color: black;
-                    border: 1px solid #CCCCCC;
-                    border-radius: 5px;
+                    gridline-color: #CCC;
+                    selection-background-color: #D6D6D6;
+                }
+                QHeaderView::section {
+                    background-color: #E0E0E0;
+                    padding: 5px;
+                    font-weight: bold;
+                    border: 1px solid #BDBDBD;
+                }
+                QComboBox {
+                    background-color: #E0E0E0;
+                    color: black;
+                    border-radius: 6px;
+                    padding: 5px;
+                    border: 1px solid #BDBDBD;
+                }
+                QComboBox:hover { border: 1px solid #888; }
+                QComboBox::drop-down { border: none; background: transparent; }
+                QComboBox QAbstractItemView {
+                    background-color: #F5F5F5;
+                    selection-background-color: #D6D6D6;
+                    border-radius: 6px;
+                }
+                QLineEdit {
+                    background-color: #FFFFFF;
+                    color: black;
+                    border: 2px solid #BDBDBD;
+                    border-radius: 8px;
+                    padding: 6px;
+                    font-size: 14px;
+                }
+                QLineEdit:focus {
+                    border: 2px solid #1DB954;
+                    background-color: #F0F0F0;
                 }
             """
-            self.setStyleSheet(light_style)
+
+        self.setStyleSheet(theme_style)
+
+        # Apply the theme to the search bar if it exists
+        if hasattr(self, "search_bar"):
+            self.search_bar.setStyleSheet(theme_style)
 
     @staticmethod
     def is_windows_dark_mode():
-        """Check if Windows is set to Dark Mode"""
         try:
             registry = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
             key = winreg.OpenKey(
@@ -111,47 +180,40 @@ class ToDoApp(QWidget):
                 r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
             )
             value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
-            winreg.CloseKey(key)  # Close the registry key after use
-            return value == 0  # 0 means Dark Mode, 1 means Light Mode
-        except FileNotFoundError:
-            return False  # Default to Light Mode if registry key is missing
-        except Exception:
-            return False  # Default if any other error occurs
+            winreg.CloseKey(key)
+            return value == 0
+        except:
+            return False
 
     def initUI(self):
-        """Initialize UI Components"""
         layout = QVBoxLayout()
 
-        # Task Input Field
         self.task_input = QLineEdit(self)
         self.task_input.setPlaceholderText("Enter a new task")
         layout.addWidget(self.task_input)
 
-        # Priority Dropdown
         self.priority_dropdown = QComboBox(self)
         self.priority_dropdown.addItems(["Low", "Medium", "High"])
         layout.addWidget(self.priority_dropdown)
 
-        # Add Task Button
         self.add_task_button = QPushButton("Add Task", self)
         self.add_task_button.clicked.connect(self.add_task)
         layout.addWidget(self.add_task_button)
 
-        # Task List
-        self.task_list = QListWidget(self)
-        layout.addWidget(self.task_list)
+        self.task_table = QTableWidget(self)
+        self.task_table.setColumnCount(4)  # Increase column count
+        self.task_table.setHorizontalHeaderLabels(["ID", "Title", "Priority", "Status"])
+        self.task_table.setSelectionBehavior(QTableWidget.SelectRows)
+        layout.addWidget(self.task_table)
 
-        # Mark Task as Complete Button
         self.complete_task_button = QPushButton("Mark as Completed", self)
         self.complete_task_button.clicked.connect(self.mark_task_complete)
         layout.addWidget(self.complete_task_button)
 
-        # Delete Task Button
         self.delete_task_button = QPushButton("Delete Task", self)
         self.delete_task_button.clicked.connect(self.delete_task)
         layout.addWidget(self.delete_task_button)
 
-        # Sorting Dropdown
         self.sort_dropdown = QComboBox(self)
         self.sort_dropdown.addItems(
             ["Priority (High to Low)", "Priority (Low to High)", "Title (A-Z)"]
@@ -159,12 +221,10 @@ class ToDoApp(QWidget):
         self.sort_dropdown.currentIndexChanged.connect(self.update_task_list)
         layout.addWidget(self.sort_dropdown)
 
-        # Save & Load Tasks Buttons
         self.save_tasks_button = QPushButton("Save Tasks", self)
         self.save_tasks_button.clicked.connect(self.save_tasks)
         layout.addWidget(self.save_tasks_button)
 
-        # Clear All Tasks Button
         self.clear_all_tasks_button = QPushButton("Clear All Tasks", self)
         self.clear_all_tasks_button.clicked.connect(self.clear_all_tasks)
         layout.addWidget(self.clear_all_tasks_button)
@@ -173,15 +233,46 @@ class ToDoApp(QWidget):
         self.load_tasks_button.clicked.connect(self.load_tasks)
         layout.addWidget(self.load_tasks_button)
 
-        # Set Layout
+        self.search_bar = QLineEdit(self)
+        self.search_bar.setPlaceholderText("🔍 Search tasks...")
+        self.search_bar.setStyleSheet(
+            """
+            QLineEdit {
+                background-color: #3A3A3A; /* Dark background */
+                color: white;
+                border: 2px solid #555;
+                border-radius: 8px;
+                padding: 6px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border: 2px solid #1DB954; /* Green border when focused */
+                background-color: #444;
+            }
+        """
+        )
+        self.search_bar.textChanged.connect(self.filter_tasks)
+        layout.addWidget(self.search_bar)
+
         self.setLayout(layout)
         self.update_task_list()
 
-    def add_task(self):
-        """Add a new task to the database"""
-        title = self.task_input.text().strip()
-        priority = self.priority_dropdown.currentIndex() + 1  # Convert index to 1, 2, 3
+        self.complete_task_button.setObjectName("complete_task_button")
+        self.delete_task_button.setObjectName("delete_task_button")
 
+    def filter_tasks(self):
+        """Filter tasks based on user input in the search bar."""
+        search_text = self.search_bar.text().strip().lower()
+
+        for row in range(self.task_table.rowCount()):
+            title_item = self.task_table.item(row, 1)  # Title column
+            if title_item:
+                title = title_item.text().strip().lower()
+                self.task_table.setRowHidden(row, search_text not in title)
+
+    def add_task(self):
+        title = self.task_input.text().strip()
+        priority = self.priority_dropdown.currentIndex() + 1
         if title:
             add_task(title, priority)
             self.task_input.clear()
@@ -190,59 +281,38 @@ class ToDoApp(QWidget):
             QMessageBox.warning(self, "Input Error", "Task title cannot be empty!")
 
     def update_task_list(self):
-        """Update the task list display"""
         tasks = get_all_tasks()
         sort_index = self.sort_dropdown.currentIndex()
-
-        sort_key = "priority"
-        reverse = True  # Default: High Priority First
-
-        if sort_index == 1:
-            reverse = False  # Low Priority First
-        elif sort_index == 2:
-            sort_key = "title"
-            reverse = False
-
+        sort_key, reverse = (
+            ("priority", True)
+            if sort_index == 0
+            else ("priority", False) if sort_index == 1 else ("title", False)
+        )
         sorted_tasks = sort_tasks(tasks, key=sort_key, reverse=reverse)
-        formatted_tasks = format_tasks(sorted_tasks)
 
-        self.task_list.clear()
-        self.task_list.addItems(formatted_tasks)
+        self.task_table.setRowCount(len(sorted_tasks))
+        for row, task in enumerate(sorted_tasks):
+            self.task_table.setItem(row, 0, QTableWidgetItem(str(task.id)))
+            self.task_table.setItem(row, 1, QTableWidgetItem(task.title))
+            self.task_table.setItem(row, 2, QTableWidgetItem(str(task.priority)))
+
+            # Status Column (Completed or Pending)
+            status_text = "Completed" if task.completed else "Pending"
+            status_item = QTableWidgetItem(status_text)
+            status_item.setForeground(
+                QColor("green") if task.completed else QColor("red")
+            )
+            self.task_table.setItem(row, 3, status_item)
 
     def mark_task_complete(self):
-        """Mark selected task as completed"""
-        selected_item = self.task_list.currentItem()
-        if selected_item:
-            task_id = int(
-                selected_item.text().split()[1].split(":")[0]
-            )  # Extract task ID
+        selected_row = self.task_table.currentRow()
+        if selected_row >= 0:
+            task_id = int(self.task_table.item(selected_row, 0).text())
             mark_task_complete(task_id)
             self.update_task_list()
         else:
             QMessageBox.warning(
-                self, "Selection Error", "Please select a task to mark as completed!"
-            )
-
-    def delete_task(self):
-        """Delete a selected task from the database"""
-        selected_item = self.task_list.currentItem()
-        if selected_item:
-            try:
-                task_id = int(
-                    selected_item.text().split()[1].split(":")[0]
-                )  # Extract task ID
-
-                if delete_task(task_id):
-                    QMessageBox.information(self, "Deleted", f"Task {task_id} deleted.")
-                else:
-                    QMessageBox.warning(self, "Error", f"Task {task_id} not found!")
-
-                self.update_task_list()
-            except ValueError:
-                QMessageBox.warning(self, "Error", "Failed to extract task ID!")
-        else:
-            QMessageBox.warning(
-                self, "Selection Error", "Please select a task to delete!"
+                self, "Selection Error", "Select a task to mark as completed!"
             )
 
     def save_tasks(self):
@@ -300,6 +370,16 @@ class ToDoApp(QWidget):
                 self, "Error", f"Failed to read {filename}! File might be corrupted."
             )
 
+    def delete_task(self):
+        """Delete the selected task from the database"""
+        selected_row = self.task_table.currentRow()
+        if selected_row >= 0:
+            task_id = int(self.task_table.item(selected_row, 0).text())
+            delete_task(task_id)
+            self.update_task_list()
+        else:
+            QMessageBox.warning(self, "Selection Error", "Select a task to delete!")
+
     def clear_all_tasks(self):
         """Clear all tasks from the database and update the UI"""
         confirmation = QMessageBox.question(
@@ -311,12 +391,11 @@ class ToDoApp(QWidget):
         )
 
         if confirmation == QMessageBox.Yes:
-            clear_all_tasks()
+            clear_all_tasks()  # Ensure this function is imported from backend.database
             self.update_task_list()
             QMessageBox.information(self, "Cleared", "All tasks have been deleted.")
 
 
-# Run the Application
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ToDoApp()
