@@ -267,7 +267,7 @@ class ToDoApp(QWidget):
         )
 
     def load_tasks(self):
-        """Load tasks from a JSON file"""
+        """Load tasks from a JSON file without duplicating existing ones"""
         filename = "tasks.json"
         if not os.path.exists(filename):
             QMessageBox.warning(self, "Error", f"No saved tasks found in {filename}!")
@@ -277,17 +277,25 @@ class ToDoApp(QWidget):
             with open(filename, "r") as file:
                 task_data = json.load(file)
 
-            for task in task_data:
-                add_task(task["title"], task["priority"])
+            # Get existing task titles to avoid duplicates
+            existing_tasks = {task.title for task in get_all_tasks()}  
 
-            self.update_task_list()
-            QMessageBox.information(
-                self, "Loaded", f"Tasks loaded successfully from {filename}!"
-            )
+            new_tasks = [
+                task for task in task_data 
+                if task["title"] not in existing_tasks
+            ]
+
+            if new_tasks:
+                for task in new_tasks:
+                    add_task(task["title"], task["priority"])
+                
+                self.update_task_list()
+                QMessageBox.information(self, "Loaded", f"Added {len(new_tasks)} new tasks from {filename}!")
+            else:
+                QMessageBox.information(self, "Loaded", "No new tasks to add.")
+
         except json.JSONDecodeError:
-            QMessageBox.warning(
-                self, "Error", f"Failed to read {filename}! File might be corrupted."
-            )
+            QMessageBox.warning(self, "Error", f"Failed to read {filename}! File might be corrupted.")
 
     def clear_all_tasks(self):
         """Clear all tasks from the database and update the UI"""
