@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import winreg
 
 # Add the parent directory (ToDoListApp) to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -20,8 +21,29 @@ class ToDoApp(QWidget):
         super().__init__()
         self.setWindowTitle("To-Do List Manager")
         self.setGeometry(200, 200, 400, 500)
-        self.dark_mode = False  # Default theme: Light
+        self.apply_theme()
         self.initUI()
+    
+    def apply_theme(self):
+        """Apply Light or Dark Mode based on Windows settings"""
+        if self.is_windows_dark_mode():
+            self.setStyleSheet("background-color: #2E2E2E; color: white;")
+        else:
+            self.setStyleSheet("")  # Default Light Mode
+
+    @staticmethod
+    def is_windows_dark_mode():
+        """Check if Windows is set to Dark Mode"""
+        try:
+            registry = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
+            key = winreg.OpenKey(registry, r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
+            value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+            winreg.CloseKey(key)  # Close the registry key after use
+            return value == 0  # 0 means Dark Mode, 1 means Light Mode
+        except FileNotFoundError:
+            return False  # Default to Light Mode if registry key is missing
+        except Exception:
+            return False  # Default if any other error occurs
 
     def initUI(self):
         """Initialize UI Components"""
@@ -62,11 +84,6 @@ class ToDoApp(QWidget):
         self.sort_dropdown.currentIndexChanged.connect(self.update_task_list)
         layout.addWidget(self.sort_dropdown)
 
-        # Toggle Dark Mode Button
-        self.dark_mode_button = QPushButton("Toggle Dark Mode", self)
-        self.dark_mode_button.clicked.connect(self.toggle_dark_mode)
-        layout.addWidget(self.dark_mode_button)
-
         # Save & Load Tasks Buttons
         self.save_tasks_button = QPushButton("Save Tasks", self)
         self.save_tasks_button.clicked.connect(self.save_tasks)
@@ -100,21 +117,20 @@ class ToDoApp(QWidget):
     def update_task_list(self):
         """Update the task list display"""
         tasks = get_all_tasks()
+        sort_index = self.sort_dropdown.currentIndex()
 
-        # Apply Sorting
         sort_key = "priority"
         reverse = True  # Default: High Priority First
 
-        if self.sort_dropdown.currentIndex() == 1:
+        if sort_index == 1:
             reverse = False  # Low Priority First
-        elif self.sort_dropdown.currentIndex() == 2:
+        elif sort_index == 2:
             sort_key = "title"
             reverse = False
 
         sorted_tasks = sort_tasks(tasks, key=sort_key, reverse=reverse)
         formatted_tasks = format_tasks(sorted_tasks)
 
-        # Update List Widget
         self.task_list.clear()
         self.task_list.addItems(formatted_tasks)
 
@@ -146,39 +162,35 @@ class ToDoApp(QWidget):
         else:
             QMessageBox.warning(self, "Selection Error", "Please select a task to delete!")
 
-    def toggle_dark_mode(self):
-        """Toggle between light and dark mode"""
-        if self.dark_mode:
-            self.setStyleSheet("")  # Reset to default
-        else:
-            self.setStyleSheet("background-color: #2E2E2E; color: white;")
-        self.dark_mode = not self.dark_mode
-
     def save_tasks(self):
         """Save tasks to a JSON file"""
+        filename = "tasks.json"
         tasks = get_all_tasks()
         task_data = [{"id": task.id, "title": task.title, "priority": task.priority, "completed": task.completed} for task in tasks]
 
-        with open("tasks.json", "w") as file:
+        with open(filename, "w") as file:
             json.dump(task_data, file, indent=4)
 
-        QMessageBox.information(self, "Saved", "Tasks saved successfully!")
+        QMessageBox.information(self, "Saved", f"Tasks saved successfully to {filename}!")
 
     def load_tasks(self):
         """Load tasks from a JSON file"""
+        filename = "tasks.json"
+        if not os.path.exists(filename):
+            QMessageBox.warning(self, "Error", f"No saved tasks found in {filename}!")
+            return
+
         try:
-            with open("tasks.json", "r") as file:
+            with open(filename, "r") as file:
                 task_data = json.load(file)
 
-            # Clear current tasks and add loaded tasks
             for task in task_data:
-                add_task(task["title"], task["priority"])  # Assuming function prevents duplicates
+                add_task(task["title"], task["priority"])
 
             self.update_task_list()
-            QMessageBox.information(self, "Loaded", "Tasks loaded successfully!")
-
-        except FileNotFoundError:
-            QMessageBox.warning(self, "Error", "No saved tasks found!")
+            QMessageBox.information(self, "Loaded", f"Tasks loaded successfully from {filename}!")
+        except json.JSONDecodeError:
+            QMessageBox.warning(self, "Error", f"Failed to read {filename}! File might be corrupted.")
 
     def clear_all_tasks(self):
         """Clear all tasks from the database and update the UI"""
