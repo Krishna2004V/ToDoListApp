@@ -16,9 +16,10 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QComboBox,
     QMessageBox,
+    QDateEdit
 )
 from PySide6.QtGui import QColor
-from PySide6.QtCore import QFile, QTimer
+from PySide6.QtCore import QFile, QTimer, QDate
 from backend.database import (
     add_task,
     get_all_tasks,
@@ -55,6 +56,7 @@ class ToDoApp(QWidget):
         if self.is_windows_dark_mode():
             theme_style = """
                 QWidget { background-color: #2E2E2E; color: white; }
+
                 QPushButton {
                     background-color: #444; 
                     color: white;
@@ -69,6 +71,7 @@ class ToDoApp(QWidget):
                 QPushButton#delete_task_button:hover { background-color: #C9302C; }
                 QPushButton#complete_task_button { background-color: #5CB85C; }
                 QPushButton#complete_task_button:hover { background-color: #4CAE4C; }
+
                 QTableWidget {
                     background-color: #3A3A3A;
                     color: white;
@@ -81,27 +84,20 @@ class ToDoApp(QWidget):
                     font-weight: bold;
                     border: 1px solid #666;
                 }
-                QComboBox {
-                    background-color: #444;
+
+                QComboBox, QDateEdit, QLineEdit {
+                    background-color: #3A3A3A;
                     color: white;
                     border-radius: 6px;
-                    padding: 5px;
+                    padding: 6px;
                     border: 1px solid #666;
+                    font-size: 14px;
                 }
-                QComboBox:hover { border: 1px solid #888; }
-                QComboBox::drop-down { border: none; background: transparent; }
+                QComboBox:hover, QDateEdit:hover, QLineEdit:hover { border: 1px solid #888; }
                 QComboBox QAbstractItemView {
                     background-color: #3A3A3A;
                     selection-background-color: #555;
                     border-radius: 6px;
-                }
-                QLineEdit {
-                    background-color: #3A3A3A;
-                    color: white;
-                    border: 2px solid #555;
-                    border-radius: 8px;
-                    padding: 6px;
-                    font-size: 14px;
                 }
                 QLineEdit:focus {
                     border: 2px solid #1DB954;
@@ -111,6 +107,7 @@ class ToDoApp(QWidget):
         else:
             theme_style = """
                 QWidget { background-color: #F5F5F5; color: black; }
+
                 QPushButton {
                     background-color: #E0E0E0; 
                     color: black;
@@ -125,6 +122,7 @@ class ToDoApp(QWidget):
                 QPushButton#delete_task_button:hover { background-color: #FF3B3B; }
                 QPushButton#complete_task_button { background-color: #4CAF50; }
                 QPushButton#complete_task_button:hover { background-color: #45A049; }
+
                 QTableWidget {
                     background-color: white;
                     color: black;
@@ -137,27 +135,20 @@ class ToDoApp(QWidget):
                     font-weight: bold;
                     border: 1px solid #BDBDBD;
                 }
-                QComboBox {
-                    background-color: #E0E0E0;
+
+                QComboBox, QDateEdit, QLineEdit {
+                    background-color: #FFFFFF;
                     color: black;
                     border-radius: 6px;
-                    padding: 5px;
+                    padding: 6px;
                     border: 1px solid #BDBDBD;
+                    font-size: 14px;
                 }
-                QComboBox:hover { border: 1px solid #888; }
-                QComboBox::drop-down { border: none; background: transparent; }
+                QComboBox:hover, QDateEdit:hover, QLineEdit:hover { border: 1px solid #888; }
                 QComboBox QAbstractItemView {
                     background-color: #F5F5F5;
                     selection-background-color: #D6D6D6;
                     border-radius: 6px;
-                }
-                QLineEdit {
-                    background-color: #FFFFFF;
-                    color: black;
-                    border: 2px solid #BDBDBD;
-                    border-radius: 8px;
-                    padding: 6px;
-                    font-size: 14px;
                 }
                 QLineEdit:focus {
                     border: 2px solid #1DB954;
@@ -167,7 +158,7 @@ class ToDoApp(QWidget):
 
         self.setStyleSheet(theme_style)
 
-        # Apply the theme to the search bar if it exists
+        # Apply the theme to individual widgets if necessary
         if hasattr(self, "search_bar"):
             self.search_bar.setStyleSheet(theme_style)
 
@@ -195,6 +186,12 @@ class ToDoApp(QWidget):
         self.priority_dropdown = QComboBox(self)
         self.priority_dropdown.addItems(["Low", "Medium", "High"])
         layout.addWidget(self.priority_dropdown)
+
+        # Move deadline input immediately below priority dropdown
+        self.deadline_input = QDateEdit(self)
+        self.deadline_input.setCalendarPopup(True)  # Enables calendar popup selection
+        self.deadline_input.setDate(QDate.currentDate())  # Default to today
+        layout.addWidget(self.deadline_input)
 
         self.add_task_button = QPushButton("Add Task", self)
         self.add_task_button.clicked.connect(self.add_task)
@@ -273,8 +270,10 @@ class ToDoApp(QWidget):
     def add_task(self):
         title = self.task_input.text().strip()
         priority = self.priority_dropdown.currentIndex() + 1
+        deadline = self.deadline_input.date().toString("yyyy-MM-dd")  # Format deadline
+
         if title:
-            add_task(title, priority)
+            add_task(title, priority, deadline)  # Pass deadline to database
             self.task_input.clear()
             self.update_task_list()
         else:
@@ -291,6 +290,9 @@ class ToDoApp(QWidget):
         sorted_tasks = sort_tasks(tasks, key=sort_key, reverse=reverse)
 
         self.task_table.setRowCount(len(sorted_tasks))
+        self.task_table.setColumnCount(5)  # Ensure there are 5 columns now
+        self.task_table.setHorizontalHeaderLabels(["ID", "Title", "Priority", "Status", "Deadline"])  # Updated
+
         for row, task in enumerate(sorted_tasks):
             self.task_table.setItem(row, 0, QTableWidgetItem(str(task.id)))
             self.task_table.setItem(row, 1, QTableWidgetItem(task.title))
@@ -299,10 +301,30 @@ class ToDoApp(QWidget):
             # Status Column (Completed or Pending)
             status_text = "Completed" if task.completed else "Pending"
             status_item = QTableWidgetItem(status_text)
-            status_item.setForeground(
-                QColor("green") if task.completed else QColor("red")
-            )
+            status_item.setForeground(QColor("green") if task.completed else QColor("red"))
             self.task_table.setItem(row, 3, status_item)
+
+            # 🛠 Handle Missing or Invalid Deadlines
+            if task.deadline and isinstance(task.deadline, str):
+                deadline_date = QDate.fromString(task.deadline, "yyyy-MM-dd")
+                if not deadline_date.isValid():  # Check if conversion was successful
+                    deadline_date = None
+            else:
+                deadline_date = None  # If deadline is missing or invalid
+
+            deadline_item = QTableWidgetItem(task.deadline if deadline_date else "N/A")  # Show "N/A" if missing
+
+            # Apply Color Coding for Deadlines
+            today = QDate.currentDate()
+            if deadline_date:
+                if deadline_date < today:
+                    deadline_item.setForeground(QColor("red"))  # Overdue
+                elif deadline_date <= today.addDays(6):
+                    deadline_item.setForeground(QColor("orange"))  # Due soon
+                else:
+                    deadline_item.setForeground(QColor("green"))  # Safe
+
+            self.task_table.setItem(row, 4, deadline_item)
 
     def mark_task_complete(self):
         selected_row = self.task_table.currentRow()

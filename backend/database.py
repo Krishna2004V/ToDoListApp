@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 
@@ -21,6 +21,7 @@ class Task(Base):
     title = Column(String, nullable=False)
     priority = Column(Integer, default=1)
     completed = Column(Boolean, default=False)
+    deadline = Column(String, nullable=True)  # Add this line
 
 
 # Ensure tables exist
@@ -37,14 +38,12 @@ def get_db():
         db.close()
 
 
-def add_task(title, priority=1):
-    """Add a new task to the database"""
-    with SessionLocal() as db:
-        new_task = Task(title=title, priority=priority)
+# Update add_task function to store deadlines
+def add_task(title, priority, deadline=None):
+    with SessionLocal() as db:  # Fix `Session` to `SessionLocal`
+        new_task = Task(title=title, priority=priority, deadline=deadline)
         db.add(new_task)
         db.commit()
-        db.refresh(new_task)
-        return new_task
 
 
 def get_all_tasks():
