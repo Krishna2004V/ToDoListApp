@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QMessageBox,
     QDateEdit,
-    QHeaderView,
+    QHeaderView
 )
 from PySide6.QtGui import QColor
 from PySide6.QtCore import QFile, QTimer, QDate
@@ -202,9 +202,7 @@ class ToDoApp(QWidget):
 
         self.task_table = QTableWidget(self)
         self.task_table.setColumnCount(5)  # Ensure 5 columns including Deadline
-        self.task_table.setHorizontalHeaderLabels(
-            ["ID", "Title", "Priority", "Status", "Deadline"]
-        )
+        self.task_table.setHorizontalHeaderLabels(["ID", "Title", "Priority", "Status", "Deadline"])
         self.task_table.setSelectionBehavior(QTableWidget.SelectRows)
         layout.addWidget(self.task_table)
 
@@ -304,9 +302,7 @@ class ToDoApp(QWidget):
 
         self.task_table.setRowCount(len(sorted_tasks))
         self.task_table.setColumnCount(5)  # Ensure there are 5 columns now
-        self.task_table.setHorizontalHeaderLabels(
-            ["ID", "Title", "Priority", "Status", "Deadline"]
-        )  # Updated
+        self.task_table.setHorizontalHeaderLabels(["ID", "Title", "Priority", "Status", "Deadline"])  # Updated
 
         for row, task in enumerate(sorted_tasks):
             self.task_table.setItem(row, 0, QTableWidgetItem(str(task.id)))
@@ -316,21 +312,15 @@ class ToDoApp(QWidget):
             # Status Column (Completed or Pending)
             status_text = "Completed" if task.completed else "Pending"
             status_item = QTableWidgetItem(status_text)
-            status_item.setForeground(
-                QColor("green") if task.completed else QColor("red")
-            )
+            status_item.setForeground(QColor("green") if task.completed else QColor("red"))
             self.task_table.setItem(row, 3, status_item)
 
             # Handle Missing or Invalid Deadlines
             deadline_item = QTableWidgetItem("N/A")  # Default value
             if task.deadline and isinstance(task.deadline, str):
-                deadline_date = QDate.fromString(
-                    task.deadline, "yyyy-MM-dd"
-                )  # Convert from DB format
+                deadline_date = QDate.fromString(task.deadline, "yyyy-MM-dd")  # Convert from DB format
                 if deadline_date.isValid():
-                    formatted_deadline = deadline_date.toString(
-                        "dd-MM-yyyy"
-                    )  # Convert to desired format
+                    formatted_deadline = deadline_date.toString("dd-MM-yyyy")  # Convert to desired format
                     deadline_item.setText(formatted_deadline)
 
                     # Apply Color Coding for Deadlines
@@ -365,11 +355,8 @@ class ToDoApp(QWidget):
                 "title": task.title,
                 "priority": task.priority,
                 "completed": task.completed,
-                "deadline": (
-                    QDate.fromString(task.deadline, "yyyy-MM-dd").toString("dd-MM-yyyy")
-                    if task.deadline
-                    else "N/A"
-                ),
+                "deadline": QDate.fromString(task.deadline, "yyyy-MM-dd").toString("dd-MM-yyyy") 
+                if task.deadline else "N/A"
             }
             for task in tasks
         ]
@@ -377,9 +364,7 @@ class ToDoApp(QWidget):
         with open(filename, "w") as file:
             json.dump(task_data, file, indent=4)
 
-        QMessageBox.information(
-            self, "Saved", f"Tasks saved successfully to {filename}!"
-        )
+        QMessageBox.information(self, "Saved", f"Tasks saved successfully to {filename}!")
 
     def load_tasks(self):
         """Load tasks from a JSON file without duplicating existing ones"""
@@ -398,30 +383,20 @@ class ToDoApp(QWidget):
             for task in task_data:
                 if task["title"] not in existing_tasks:
                     # Convert "DD-MM-YYYY" back to "YYYY-MM-DD" before adding to DB
-                    deadline_qdate = QDate.fromString(
-                        task.get("deadline", ""), "dd-MM-yyyy"
-                    )
-                    deadline_str = (
-                        deadline_qdate.toString("yyyy-MM-dd")
-                        if deadline_qdate.isValid()
-                        else None
-                    )
+                    deadline_qdate = QDate.fromString(task.get("deadline", ""), "dd-MM-yyyy")
+                    deadline_str = deadline_qdate.toString("yyyy-MM-dd") if deadline_qdate.isValid() else None
 
                     add_task(task["title"], task["priority"], deadline_str)
                     new_tasks.append(task)
 
             if new_tasks:
                 self.update_task_list()
-                QMessageBox.information(
-                    self, "Loaded", f"Added {len(new_tasks)} new tasks from {filename}!"
-                )
+                QMessageBox.information(self, "Loaded", f"Added {len(new_tasks)} new tasks from {filename}!")
             else:
                 QMessageBox.information(self, "Loaded", "No new tasks to add.")
 
         except json.JSONDecodeError:
-            QMessageBox.warning(
-                self, "Error", f"Failed to read {filename}! File might be corrupted."
-            )
+            QMessageBox.warning(self, "Error", f"Failed to read {filename}! File might be corrupted.")
 
     def delete_task(self):
         """Delete the selected task from the database"""
