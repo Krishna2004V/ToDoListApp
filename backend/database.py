@@ -68,3 +68,10 @@ def delete_task(task_id: int):
         return True
     db.close()
     return False
+
+def clear_all_tasks():
+    """Delete all tasks from the database"""
+    db = SessionLocal()
+    db.query(Task).delete()
+    db.commit()
+    db.close()

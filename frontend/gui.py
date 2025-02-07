@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QComboBox, QMessageBox
 )
 from PySide6.QtCore import QFile
-from backend.database import add_task, get_all_tasks, mark_task_complete, delete_task
+from backend.database import add_task, get_all_tasks, mark_task_complete, delete_task, clear_all_tasks
 from backend.utils import filter_tasks, sort_tasks, format_tasks
 
 class ToDoApp(QWidget):
@@ -71,6 +71,11 @@ class ToDoApp(QWidget):
         self.save_tasks_button = QPushButton("Save Tasks", self)
         self.save_tasks_button.clicked.connect(self.save_tasks)
         layout.addWidget(self.save_tasks_button)
+
+        # Clear All Tasks Button
+        self.clear_all_tasks_button = QPushButton("Clear All Tasks", self)
+        self.clear_all_tasks_button.clicked.connect(self.clear_all_tasks)
+        layout.addWidget(self.clear_all_tasks_button)
 
         self.load_tasks_button = QPushButton("Load Tasks", self)
         self.load_tasks_button.clicked.connect(self.load_tasks)
@@ -174,6 +179,18 @@ class ToDoApp(QWidget):
 
         except FileNotFoundError:
             QMessageBox.warning(self, "Error", "No saved tasks found!")
+
+    def clear_all_tasks(self):
+        """Clear all tasks from the database and update the UI"""
+        confirmation = QMessageBox.question(
+            self, "Clear All Tasks", "Are you sure you want to delete all tasks?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        )
+
+        if confirmation == QMessageBox.Yes:
+            clear_all_tasks()
+            self.update_task_list()
+            QMessageBox.information(self, "Cleared", "All tasks have been deleted.")
 
 # Run the Application
 if __name__ == "__main__":
