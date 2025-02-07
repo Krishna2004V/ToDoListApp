@@ -7,12 +7,25 @@ import winreg
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from PySide6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QPushButton, QListWidget, QLineEdit, 
-    QComboBox, QMessageBox
+    QApplication,
+    QWidget,
+    QVBoxLayout,
+    QPushButton,
+    QListWidget,
+    QLineEdit,
+    QComboBox,
+    QMessageBox,
 )
 from PySide6.QtCore import QFile, QTimer
-from backend.database import add_task, get_all_tasks, mark_task_complete, delete_task, clear_all_tasks
+from backend.database import (
+    add_task,
+    get_all_tasks,
+    mark_task_complete,
+    delete_task,
+    clear_all_tasks,
+)
 from backend.utils import filter_tasks, sort_tasks, format_tasks
+
 
 class ToDoApp(QWidget):
     """Main GUI Application for the To-Do List Manager"""
@@ -36,7 +49,7 @@ class ToDoApp(QWidget):
         if current_mode != self.dark_mode:
             self.dark_mode = current_mode
             self.apply_theme()
-                
+
     def apply_theme(self):
         """Apply Light or Dark Mode based on Windows settings"""
         if self.is_windows_dark_mode():
@@ -93,7 +106,10 @@ class ToDoApp(QWidget):
         """Check if Windows is set to Dark Mode"""
         try:
             registry = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
-            key = winreg.OpenKey(registry, r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
+            key = winreg.OpenKey(
+                registry,
+                r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+            )
             value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
             winreg.CloseKey(key)  # Close the registry key after use
             return value == 0  # 0 means Dark Mode, 1 means Light Mode
@@ -137,7 +153,9 @@ class ToDoApp(QWidget):
 
         # Sorting Dropdown
         self.sort_dropdown = QComboBox(self)
-        self.sort_dropdown.addItems(["Priority (High to Low)", "Priority (Low to High)", "Title (A-Z)"])
+        self.sort_dropdown.addItems(
+            ["Priority (High to Low)", "Priority (Low to High)", "Title (A-Z)"]
+        )
         self.sort_dropdown.currentIndexChanged.connect(self.update_task_list)
         layout.addWidget(self.sort_dropdown)
 
@@ -195,19 +213,25 @@ class ToDoApp(QWidget):
         """Mark selected task as completed"""
         selected_item = self.task_list.currentItem()
         if selected_item:
-            task_id = int(selected_item.text().split()[1].split(":")[0])  # Extract task ID
+            task_id = int(
+                selected_item.text().split()[1].split(":")[0]
+            )  # Extract task ID
             mark_task_complete(task_id)
             self.update_task_list()
         else:
-            QMessageBox.warning(self, "Selection Error", "Please select a task to mark as completed!")
+            QMessageBox.warning(
+                self, "Selection Error", "Please select a task to mark as completed!"
+            )
 
     def delete_task(self):
         """Delete a selected task from the database"""
         selected_item = self.task_list.currentItem()
         if selected_item:
             try:
-                task_id = int(selected_item.text().split()[1].split(":")[0])  # Extract task ID
-                
+                task_id = int(
+                    selected_item.text().split()[1].split(":")[0]
+                )  # Extract task ID
+
                 if delete_task(task_id):
                     QMessageBox.information(self, "Deleted", f"Task {task_id} deleted.")
                 else:
@@ -217,18 +241,30 @@ class ToDoApp(QWidget):
             except ValueError:
                 QMessageBox.warning(self, "Error", "Failed to extract task ID!")
         else:
-            QMessageBox.warning(self, "Selection Error", "Please select a task to delete!")
+            QMessageBox.warning(
+                self, "Selection Error", "Please select a task to delete!"
+            )
 
     def save_tasks(self):
         """Save tasks to a JSON file"""
         filename = "tasks.json"
         tasks = get_all_tasks()
-        task_data = [{"id": task.id, "title": task.title, "priority": task.priority, "completed": task.completed} for task in tasks]
+        task_data = [
+            {
+                "id": task.id,
+                "title": task.title,
+                "priority": task.priority,
+                "completed": task.completed,
+            }
+            for task in tasks
+        ]
 
         with open(filename, "w") as file:
             json.dump(task_data, file, indent=4)
 
-        QMessageBox.information(self, "Saved", f"Tasks saved successfully to {filename}!")
+        QMessageBox.information(
+            self, "Saved", f"Tasks saved successfully to {filename}!"
+        )
 
     def load_tasks(self):
         """Load tasks from a JSON file"""
@@ -245,21 +281,29 @@ class ToDoApp(QWidget):
                 add_task(task["title"], task["priority"])
 
             self.update_task_list()
-            QMessageBox.information(self, "Loaded", f"Tasks loaded successfully from {filename}!")
+            QMessageBox.information(
+                self, "Loaded", f"Tasks loaded successfully from {filename}!"
+            )
         except json.JSONDecodeError:
-            QMessageBox.warning(self, "Error", f"Failed to read {filename}! File might be corrupted.")
+            QMessageBox.warning(
+                self, "Error", f"Failed to read {filename}! File might be corrupted."
+            )
 
     def clear_all_tasks(self):
         """Clear all tasks from the database and update the UI"""
         confirmation = QMessageBox.question(
-            self, "Clear All Tasks", "Are you sure you want to delete all tasks?",
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+            self,
+            "Clear All Tasks",
+            "Are you sure you want to delete all tasks?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
         )
 
         if confirmation == QMessageBox.Yes:
             clear_all_tasks()
             self.update_task_list()
             QMessageBox.information(self, "Cleared", "All tasks have been deleted.")
+
 
 # Run the Application
 if __name__ == "__main__":

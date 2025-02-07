@@ -4,8 +4,15 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../backend")))
 
-from backend.database import SessionLocal, Task, add_task, get_all_tasks, mark_task_complete
+from backend.database import (
+    SessionLocal,
+    Task,
+    add_task,
+    get_all_tasks,
+    mark_task_complete,
+)
 from backend.utils import sort_tasks, filter_tasks
+
 
 class TestToDoListManager(unittest.TestCase):
 
@@ -13,16 +20,16 @@ class TestToDoListManager(unittest.TestCase):
         """Set up test environment"""
         # Create a session
         db = SessionLocal()
-        
+
         # Clear all existing tasks before each test
         db.query(Task).delete()
         db.commit()
-        
+
         # Add fresh tasks
         self.task1 = add_task("Write tests", priority=2)
         self.task2 = add_task("Fix bugs", priority=1)
         self.task3 = add_task("Optimize code", priority=3)
-        
+
         # Close the session after setup
         db.close()
 
@@ -42,7 +49,9 @@ class TestToDoListManager(unittest.TestCase):
         """Test sorting functionality"""
         tasks = get_all_tasks()
         sorted_tasks = sort_tasks(tasks, key="priority", reverse=True)
-        self.assertEqual(sorted_tasks[0].title, "Optimize code")  # Highest priority first
+        self.assertEqual(
+            sorted_tasks[0].title, "Optimize code"
+        )  # Highest priority first
 
     def test_filter_tasks(self):
         """Test filtering completed tasks"""
@@ -58,6 +67,7 @@ class TestToDoListManager(unittest.TestCase):
         db.query(Task).delete()
         db.commit()
         db.close()
+
 
 if __name__ == "__main__":
     unittest.main()
