@@ -1,28 +1,30 @@
- 
-name: CI Pipeline
+name: ToDoListApp CI
 
-on: [push, pull_request]  # Runs on every push and PR
+on: [push, pull_request]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest  # Uses a Linux environment
+  build:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v3
+      - name: Set Up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.11"
 
       - name: Install Dependencies
         run: |
-          python -m venv env
-          source env/bin/activate
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Tests
-        run: |
-          source env/bin/activate
-          pytest tests/
+      - name: Run Black (Code Formatter)
+        run: black --check .
+
+      - name: Run Flake8 (Linting)
+        run: flake8 --max-line-length=88
+
+      - name: Run Pytest (Unit Tests)
+        run: pytest --disable-warnings

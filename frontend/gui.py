@@ -117,7 +117,7 @@ class ToDoApp(QWidget):
         """Mark selected task as completed"""
         selected_item = self.task_list.currentItem()
         if selected_item:
-            task_id = int(selected_item.text().split()[1])  # Extract task ID
+            task_id = int(selected_item.text().split()[1].split(":")[0])  # Extract task ID
             mark_task_complete(task_id)
             self.update_task_list()
         else:
@@ -127,7 +127,7 @@ class ToDoApp(QWidget):
         """Delete a selected task from the list"""
         selected_item = self.task_list.currentItem()
         if selected_item:
-            task_id = int(selected_item.text().split()[1])  # Extract task ID
+            task_id = int(selected_item.text().split()[1].split(":")[0])  # Extract task ID
             # Here, you should implement a delete function in the database module
             # For now, we just remove it from the list
             QMessageBox.information(self, "Deleted", f"Task {task_id} deleted.")
