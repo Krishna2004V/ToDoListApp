@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QListWidget, QLineEdit, 
     QComboBox, QMessageBox
 )
-from PySide6.QtCore import QFile
+from PySide6.QtCore import QFile, QTimer
 from backend.database import add_task, get_all_tasks, mark_task_complete, delete_task, clear_all_tasks
 from backend.utils import filter_tasks, sort_tasks, format_tasks
 
@@ -21,15 +21,72 @@ class ToDoApp(QWidget):
         super().__init__()
         self.setWindowTitle("To-Do List Manager")
         self.setGeometry(200, 200, 400, 500)
+        self.dark_mode = self.is_windows_dark_mode()  # Store initial theme
         self.apply_theme()
         self.initUI()
-    
+
+        # Periodically check for theme changes
+        self.theme_timer = QTimer(self)
+        self.theme_timer.timeout.connect(self.check_theme_update)
+        self.theme_timer.start(3000)  # Check every 3 seconds
+
+    def check_theme_update(self):
+        """Check if Windows theme changed and update the UI"""
+        current_mode = self.is_windows_dark_mode()
+        if current_mode != self.dark_mode:
+            self.dark_mode = current_mode
+            self.apply_theme()
+                
     def apply_theme(self):
         """Apply Light or Dark Mode based on Windows settings"""
         if self.is_windows_dark_mode():
-            self.setStyleSheet("background-color: #2E2E2E; color: white;")
+            dark_style = """
+                QWidget {
+                    background-color: #2E2E2E;
+                    color: white;
+                }
+                QPushButton {
+                    background-color: #555555;
+                    color: white;
+                    border: 1px solid #777777;
+                    border-radius: 5px;
+                    padding: 5px;
+                }
+                QPushButton:hover {
+                    background-color: #666666;
+                }
+                QLineEdit, QComboBox, QListWidget {
+                    background-color: #444444;
+                    color: white;
+                    border: 1px solid #666666;
+                    border-radius: 5px;
+                }
+            """
+            self.setStyleSheet(dark_style)
         else:
-            self.setStyleSheet("")  # Default Light Mode
+            light_style = """
+                QWidget {
+                    background-color: #F5F5F5;
+                    color: black;
+                }
+                QPushButton {
+                    background-color: #DDDDDD;
+                    color: black;
+                    border: 1px solid #CCCCCC;
+                    border-radius: 5px;
+                    padding: 5px;
+                }
+                QPushButton:hover {
+                    background-color: #EEEEEE;
+                }
+                QLineEdit, QComboBox, QListWidget {
+                    background-color: white;
+                    color: black;
+                    border: 1px solid #CCCCCC;
+                    border-radius: 5px;
+                }
+            """
+            self.setStyleSheet(light_style)
 
     @staticmethod
     def is_windows_dark_mode():
