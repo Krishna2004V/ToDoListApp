@@ -12,3 +12,8 @@ __pycache__/
 # IDE settings
 .vscode/
 .idea/
+
+# Ignore database file
+tasks.db
+
+venv/
