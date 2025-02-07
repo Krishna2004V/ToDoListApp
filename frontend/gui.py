@@ -278,24 +278,27 @@ class ToDoApp(QWidget):
                 task_data = json.load(file)
 
             # Get existing task titles to avoid duplicates
-            existing_tasks = {task.title for task in get_all_tasks()}  
+            existing_tasks = {task.title for task in get_all_tasks()}
 
             new_tasks = [
-                task for task in task_data 
-                if task["title"] not in existing_tasks
+                task for task in task_data if task["title"] not in existing_tasks
             ]
 
             if new_tasks:
                 for task in new_tasks:
                     add_task(task["title"], task["priority"])
-                
+
                 self.update_task_list()
-                QMessageBox.information(self, "Loaded", f"Added {len(new_tasks)} new tasks from {filename}!")
+                QMessageBox.information(
+                    self, "Loaded", f"Added {len(new_tasks)} new tasks from {filename}!"
+                )
             else:
                 QMessageBox.information(self, "Loaded", "No new tasks to add.")
 
         except json.JSONDecodeError:
-            QMessageBox.warning(self, "Error", f"Failed to read {filename}! File might be corrupted.")
+            QMessageBox.warning(
+                self, "Error", f"Failed to read {filename}! File might be corrupted."
+            )
 
     def clear_all_tasks(self):
         """Clear all tasks from the database and update the UI"""
