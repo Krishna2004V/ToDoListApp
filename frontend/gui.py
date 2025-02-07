@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QComboBox, QMessageBox
 )
 from PySide6.QtCore import QFile
-from backend.database import add_task, get_all_tasks, mark_task_complete
+from backend.database import add_task, get_all_tasks, mark_task_complete, delete_task
 from backend.utils import filter_tasks, sort_tasks, format_tasks
 
 class ToDoApp(QWidget):
@@ -124,14 +124,20 @@ class ToDoApp(QWidget):
             QMessageBox.warning(self, "Selection Error", "Please select a task to mark as completed!")
 
     def delete_task(self):
-        """Delete a selected task from the list"""
+        """Delete a selected task from the database"""
         selected_item = self.task_list.currentItem()
         if selected_item:
-            task_id = int(selected_item.text().split()[1].split(":")[0])  # Extract task ID
-            # Here, you should implement a delete function in the database module
-            # For now, we just remove it from the list
-            QMessageBox.information(self, "Deleted", f"Task {task_id} deleted.")
-            self.update_task_list()
+            try:
+                task_id = int(selected_item.text().split()[1].split(":")[0])  # Extract task ID
+                
+                if delete_task(task_id):
+                    QMessageBox.information(self, "Deleted", f"Task {task_id} deleted.")
+                else:
+                    QMessageBox.warning(self, "Error", f"Task {task_id} not found!")
+
+                self.update_task_list()
+            except ValueError:
+                QMessageBox.warning(self, "Error", "Failed to extract task ID!")
         else:
             QMessageBox.warning(self, "Selection Error", "Please select a task to delete!")
 

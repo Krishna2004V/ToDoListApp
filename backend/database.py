@@ -56,3 +56,15 @@ def mark_task_complete(task_id):
         task.completed = True
         db.commit()
     db.close()
+
+def delete_task(task_id: int):
+    """Delete a task from the database by its ID"""
+    db = SessionLocal()
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if task:
+        db.delete(task)
+        db.commit()
+        db.close()
+        return True
+    db.close()
+    return False
