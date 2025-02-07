@@ -37,6 +37,6 @@ print("\n".join(format_tasks(sorted_tasks)))
 # Mark a task as completed and check again
 mark_task_complete(task1.id)
 tasks = get_all_tasks()
-completed_tasks = filter_tasks(tasks, status=True)
+completed_tasks = filter_tasks(tasks, completed=True)
 print("\nCompleted Tasks After Marking:")
 print("\n".join(format_tasks(completed_tasks)))
