@@ -43,7 +43,9 @@ class TestToDoListManager(unittest.TestCase):
         """Test sorting functionality"""
         tasks = get_all_tasks()
         sorted_tasks = sort_tasks(tasks, key="priority", reverse=True)
-        self.assertEqual(sorted_tasks[0].title, "Optimize code")  # Highest priority first
+        self.assertEqual(
+            sorted_tasks[0].title, "Optimize code"
+        )  # Highest priority first
 
     def test_filter_tasks(self):
         """Test filtering completed tasks"""
@@ -58,6 +60,7 @@ class TestToDoListManager(unittest.TestCase):
         self.db.query(Task).delete()
         self.db.commit()
         self.db.close()
+
 
 if __name__ == "__main__":
     unittest.main()
