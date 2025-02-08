@@ -20,7 +20,7 @@ print("\nAll Tasks:")
 print("\n".join(format_tasks(tasks)))
 
 # Filter only completed tasks
-completed_tasks = filter_tasks(tasks, status=True)
+completed_tasks = filter_tasks(tasks, completed=True)
 print("\nCompleted Tasks:")
 print("\n".join(format_tasks(completed_tasks)))
 
