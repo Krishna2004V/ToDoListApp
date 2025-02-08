@@ -1,0 +1,31 @@
+name: ToDoListApp CI/CD
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Black (Code Formatter)
+        run: black --check .
+
+      - name: Set Up Test Database
+        run: |
+          touch tasks.db  # Create an empty SQLite database for testing
+
+      - name: Run Pytest (Unit Tests)
+        run: pytest --disable-warnings
