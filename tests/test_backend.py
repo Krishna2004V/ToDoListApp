@@ -18,20 +18,14 @@ class TestToDoListManager(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment"""
-        # Create a session
-        db = SessionLocal()
-
-        # Clear all existing tasks before each test
-        db.query(Task).delete()
-        db.commit()
+        self.db = SessionLocal()  # Create session instance
+        self.db.query(Task).delete()  # Clear tasks
+        self.db.commit()
 
         # Add fresh tasks
-        self.task1 = add_task("Write tests", priority=2)
-        self.task2 = add_task("Fix bugs", priority=1)
-        self.task3 = add_task("Optimize code", priority=3)
-
-        # Close the session after setup
-        db.close()
+        self.task1 = add_task("Write tests", priority=2, deadline=None)
+        self.task2 = add_task("Fix bugs", priority=1, deadline=None)
+        self.task3 = add_task("Optimize code", priority=3, deadline=None)
 
     def test_add_task(self):
         """Test if tasks are added correctly"""
@@ -49,9 +43,7 @@ class TestToDoListManager(unittest.TestCase):
         """Test sorting functionality"""
         tasks = get_all_tasks()
         sorted_tasks = sort_tasks(tasks, key="priority", reverse=True)
-        self.assertEqual(
-            sorted_tasks[0].title, "Optimize code"
-        )  # Highest priority first
+        self.assertEqual(sorted_tasks[0].title, "Optimize code")  # Highest priority first
 
     def test_filter_tasks(self):
         """Test filtering completed tasks"""
@@ -63,11 +55,9 @@ class TestToDoListManager(unittest.TestCase):
 
     def tearDown(self):
         """Clean up database after each test"""
-        db = SessionLocal()
-        db.query(Task).delete()
-        db.commit()
-        db.close()
-
+        self.db.query(Task).delete()
+        self.db.commit()
+        self.db.close()
 
 if __name__ == "__main__":
     unittest.main()
